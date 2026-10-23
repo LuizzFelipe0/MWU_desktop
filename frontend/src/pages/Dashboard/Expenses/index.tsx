@@ -109,7 +109,7 @@ const ExpensesAnalysisChart: React.FC<Props> = ({ data }) => {
         series={chartConfig.series}
         type="bar"
         height={400}
-        width="100%"
+        width={600}
       />
     </S.ChartCard>
   );

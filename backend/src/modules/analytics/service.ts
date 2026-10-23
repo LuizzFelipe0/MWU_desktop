@@ -1,36 +1,60 @@
 import { AppDataSource } from '../../db';
 import { Account } from '../accounts/entity';
+import { Category } from '../categories/entity';
+import { CategoryType } from '../category_types/entity';
 import { FinancialGoal } from '../financial_goals/entity';
 import { Transaction } from '../transactions/entity';
 
 export const analyticsService = {
   expensesByMonth: async (userId: string) => {
     const year = new Date().getFullYear();
-    const rows = await AppDataSource.getRepository(Transaction)
-      .createQueryBuilder('transaction')
-      .innerJoin('categories', 'category', 'category.id = transaction.category_id')
-      .innerJoin('category_types', 'categoryType', 'categoryType.id = category.category_type_id')
-      .select('CAST(strftime("%Y", transaction.date) AS INTEGER)', 'year')
-      .addSelect('CAST(strftime("%m", transaction.date) AS INTEGER)', 'month')
-      .addSelect('categoryType.name', 'category_name')
-      .addSelect('categoryType.name', 'category_type_name')
-      .addSelect('categoryType.is_positive', 'is_positive')
-      .addSelect('SUM(transaction.amount)', 'total_amount')
-      .addSelect('0', 'percentage')
-      .where('transaction.user_id = :userId', { userId })
-      .andWhere('CAST(strftime("%Y", transaction.date) AS INTEGER) = :year', { year })
-      .andWhere('transaction.deleted_at IS NULL')
-      .groupBy('year, month, categoryType.name, categoryType.is_positive')
-      .orderBy('month', 'ASC')
-      .getRawMany();
-    return rows.map((row) => ({
-      ...row,
-      year: Number(row.year),
-      month: Number(row.month),
-      total_amount: Number(row.total_amount),
-      is_positive: row.is_positive === true || row.is_positive === 1 || row.is_positive === '1',
-      percentage: Number(row.percentage),
-    }));
+    const [transactions, categories, categoryTypes] = await Promise.all([
+      AppDataSource.getRepository(Transaction).findBy({ user_id: userId }),
+      AppDataSource.getRepository(Category).findBy({ user_id: userId }),
+      AppDataSource.getRepository(CategoryType).find(),
+    ]);
+
+    const categoriesById = new Map(categories.map((category) => [category.id, category]));
+    const categoryTypesById = new Map(categoryTypes.map((categoryType) => [categoryType.id, categoryType]));
+    const totalsByMonthAndType = new Map<string, {
+      year: number;
+      month: number;
+      categoryType: CategoryType;
+      total: number;
+    }>();
+
+    for (const transaction of transactions) {
+      if (transaction.deleted_at) continue;
+      const date = new Date(transaction.date);
+      if (Number.isNaN(date.getTime()) || date.getFullYear() !== year) continue;
+
+      const category = categoriesById.get(transaction.category_id);
+      const categoryType = category && categoryTypesById.get(category.category_type_id);
+      if (!categoryType) continue;
+
+      const month = date.getMonth() + 1;
+      const key = `${year}-${month}-${categoryType.id}`;
+      const current = totalsByMonthAndType.get(key);
+      if (current) current.total += Number(transaction.amount) || 0;
+      else totalsByMonthAndType.set(key, { year, month, categoryType, total: Number(transaction.amount) || 0 });
+    }
+
+    const monthlyTotals = new Map<number, number>();
+    for (const row of totalsByMonthAndType.values()) {
+      monthlyTotals.set(row.month, (monthlyTotals.get(row.month) ?? 0) + row.total);
+    }
+
+    return [...totalsByMonthAndType.values()]
+      .map(({ year: rowYear, month, categoryType, total }) => ({
+        year: rowYear,
+        month,
+        category_name: categoryType.name,
+        category_type_name: categoryType.name,
+        is_positive: categoryType.is_positive,
+        total_amount: total,
+        percentage: monthlyTotals.get(month) ? (total / monthlyTotals.get(month)!) * 100 : 0,
+      }))
+      .sort((left, right) => left.month - right.month || left.category_type_name.localeCompare(right.category_type_name));
   },
 
   goalProgress: async (userId: string) => {
