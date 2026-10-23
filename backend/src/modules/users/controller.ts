@@ -34,6 +34,5 @@ function toSession(user: NonNullable<Awaited<ReturnType<typeof userService.getBy
     last_name: user.last_name,
     cpf: user.cpf,
     manual_balance: user.manual_balance,
-    is_admin: false,
   };
 }

@@ -4,7 +4,6 @@ export interface User {
   first_name: string;
   last_name: string;
   cpf: string;
-  is_admin: boolean;
   manual_balance: number;
   created_at: string;
   updated_at: string;
@@ -22,7 +21,7 @@ export interface UserInput extends Pick <
 
 export type UserSession = Pick<
   User,
-  'id' | 'email' | 'first_name' | 'last_name' | 'cpf' | 'manual_balance' | 'is_admin'
+  'id' | 'email' | 'first_name' | 'last_name' | 'cpf' | 'manual_balance'
 >;
 
 
