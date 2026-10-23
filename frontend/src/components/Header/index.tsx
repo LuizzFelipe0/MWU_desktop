@@ -36,15 +36,7 @@ const Header: React.FC = () => {
 
       {user && (
         <S.UserArea>
-          <S.UserGreeting>
-            {user.is_admin ? (
-              <>
-                Olá <strong>Admin</strong>, {user.first_name}
-              </>
-            ) : (
-              <>Olá, {user.first_name}</>
-            )}
-          </S.UserGreeting>
+          <S.UserGreeting>Olá, {user.first_name}</S.UserGreeting>
 
           <S.MenuWrapper title="Configurações">
             <SelectInput

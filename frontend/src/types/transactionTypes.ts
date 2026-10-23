@@ -3,7 +3,7 @@ export interface Transaction {
   user_id: string;
   account_id: string;
   category_id: string;
-  recurrence_id: string;
+  recurrence_id: string | null;
   name: string;
   description: string;
   amount: number;

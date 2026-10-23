@@ -10,11 +10,11 @@ import ExpensesAnalysisChart from './Expenses/index.tsx';
 import GoalsAnalysisChart from './Goals/index.tsx';
 
 const DashboardPage: React.FC = () => {
-  const { data: goals, loading: loadingGoals } = useApi<GoalsAnalysis>(
+  const { data: goals, loading: loadingGoals, error: goalsError } = useApi<GoalsAnalysis>(
     goalAnalysisService,
     true,
   );
-  const { data: expenses, loading: loadingExpenses } = useApi<ExpensesAnalysis>(
+  const { data: expenses, loading: loadingExpenses, error: expensesError } = useApi<ExpensesAnalysis>(
     expensesAnalysisService,
     true,
   );
@@ -26,6 +26,8 @@ const DashboardPage: React.FC = () => {
           <S.LoadingPlaceholder>
             Processando dados financeiros...
           </S.LoadingPlaceholder>
+        ) : expensesError ? (
+          <S.LoadingPlaceholder>{expensesError}</S.LoadingPlaceholder>
         ) : (
           <ExpensesAnalysisChart data={expenses} />
         )}
@@ -34,6 +36,8 @@ const DashboardPage: React.FC = () => {
       <CardBox title="Progresso das Metas" >
         {loadingGoals ? (
           <S.LoadingPlaceholder>Carregando metas...</S.LoadingPlaceholder>
+        ) : goalsError ? (
+          <S.LoadingPlaceholder>{goalsError}</S.LoadingPlaceholder>
         ) : (
           <GoalsAnalysisChart goals={goals} />
         )}

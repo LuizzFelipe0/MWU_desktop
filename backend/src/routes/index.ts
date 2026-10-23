@@ -5,6 +5,7 @@ import categoriesRouter from '../modules/categories/routes';
 import financialGoalsRouter from '../modules/financial_goals/routes';
 import usersRouter from '../modules/users/routes';
 import authRouter from '../modules/auth/routes';
+import analyticsRouter from '../modules/analytics/routes';
 
 const router = Router();
 
@@ -14,5 +15,6 @@ router.use('/accounts', accountsRouter);
 router.use('/transactions', transactionsRouter);
 router.use('/categories', categoriesRouter);
 router.use('/financial_goals', financialGoalsRouter);
+router.use('/', analyticsRouter);
 
 export default router;

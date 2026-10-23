@@ -18,7 +18,6 @@ export const authController = {
         last_name: user.last_name,
         cpf: user.cpf,
         manual_balance: user.manual_balance,
-        is_admin: false,
       },
     });
   },
