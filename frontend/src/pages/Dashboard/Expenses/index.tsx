@@ -9,6 +9,10 @@ interface Props {
 }
 
 const ExpensesAnalysisChart: React.FC<Props> = ({ data }) => {
+  if (data.length === 0) {
+    return <S.ChartCard>Não há transações neste ano para exibir.</S.ChartCard>;
+  }
+
   const chartConfig = useMemo(() => {
     const monthLabels = [
       'Jan',
@@ -105,7 +109,7 @@ const ExpensesAnalysisChart: React.FC<Props> = ({ data }) => {
         series={chartConfig.series}
         type="bar"
         height={400}
-        width={600}
+        width="100%"
       />
     </S.ChartCard>
   );

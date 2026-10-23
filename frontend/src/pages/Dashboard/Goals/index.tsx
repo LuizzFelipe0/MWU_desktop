@@ -9,13 +9,17 @@ interface Props {
 }
 
 const GoalsAnalysisChart: React.FC<Props> = ({ goals }) => {
+  if (goals.length === 0) {
+    return <S.Container>Nenhuma meta financeira cadastrada.</S.Container>;
+  }
+
   return (
     <S.Container>
       {goals.map((goal) => {
 
-        const percentage = parseFloat(
+        const percentage = Math.min(100, Math.max(0, parseFloat(
           goal.progress_percentage.replace('%', ''),
-        );
+        ) || 0));
 
         const chartOptions: ApexCharts.ApexOptions = {
           chart: { type: 'radialBar' },
