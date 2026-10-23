@@ -1,66 +1,23 @@
-import React, { useState } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
-import { useApi } from '../../hooks/useApi.tsx';
-import { accountService } from '../../services/accountService.ts';
-import { Account, AccountInput } from '../../types/accountTypes.ts';
-
-import * as S from './styles.ts';
-import CardBox from '../../components/CardBox/index.tsx';
-import Button from '../../components/Button/DefaultButton/index.tsx';
-import SearchBar from '../../components/SearchBar/index.tsx';
-import List from '../../components/List/index.tsx';
-import { useFilter } from '../../hooks/useFilter.tsx';
+import React from 'react';
+import { useApi } from '../../hooks/useApi';
+import EntityList from '../../components/EntityList';
+import { accountService } from '../../services/accountService';
+import { Account, AccountInput } from '../../types/accountTypes';
 
 const AccountsPage: React.FC = () => {
-  const navigate = useNavigate();
-  const { data, refresh } = useApi<Account, AccountInput>(
-    accountService,
-    true,
-  );
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const filteredData = useFilter(data, searchTerm, 'name');
+  const { data, refresh } = useApi<Account, AccountInput>(accountService, true);
 
   return (
-    <S.Container>
-      <CardBox title="Contas Bancárias">
-        <S.HeaderActions>
-          <SearchBar
-            placeholder="Buscar conta bancária..."
-            value={searchTerm}
-            onChange={setSearchTerm}
-          />
-          <Button icon="add" onClick={() => navigate('add')}></Button>
-        </S.HeaderActions>
-
-        <List>
-          {filteredData.map((accounts) => (
-            <List.Item key={accounts.id}>
-              <List.Info>
-                <S.ItemTitle>{accounts.name}</S.ItemTitle>
-                <small
-                >
-                  {accounts.type}
-                </small>
-              </List.Info>
-              <List.Actions>
-                <Button
-                  icon="update"
-                  variant="warning"
-                  onClick={() => navigate(accounts.id)}
-                ></Button>
-              </List.Actions>
-            </List.Item>
-          ))}
-        </List>
-
-        {filteredData.length === 0 && (
-          <S.EmptyState>Nenhuma Conta Bancária encontrada.</S.EmptyState>
-        )}
-      </CardBox>
-
-      <Outlet context={{ refresh }} />
-    </S.Container>
+    <EntityList
+      title="Contas Bancárias"
+      searchPlaceholder="Buscar conta bancária..."
+      emptyMessage="Nenhuma conta bancária encontrada."
+      data={data}
+      refresh={refresh}
+      getId={(account) => account.id}
+      getName={(account) => account.name}
+      getDetails={(account) => account.type}
+    />
   );
 };
 

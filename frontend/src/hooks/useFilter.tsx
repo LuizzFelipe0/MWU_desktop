@@ -12,14 +12,16 @@ interface FilterOptions<T> {
 export function useFilter<T>(
   data: T[],
   searchTerm: string,
-  searchKey: keyof T,
+  searchKey: keyof T | ((item: T) => unknown),
   options?: FilterOptions<T>,
 ) {
   return useMemo(() => {
     if (!data) return [];
 
     return data.filter((item: any) => {
-      const matchesSearch = String(item[searchKey] || '')
+      const searchValue =
+        typeof searchKey === 'function' ? searchKey(item) : item[searchKey];
+      const matchesSearch = String(searchValue || '')
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
 
