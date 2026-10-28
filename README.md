@@ -2,7 +2,7 @@
 
 MWU is a personal finance application with a React and TypeScript frontend and a local Express and TypeScript API. The backend stores application data in SQLite.
 
-> **Electron status:** Electron's main process, desktop shell, and packaging configuration are not included yet. The frontend currently runs in a browser through Vite and connects to the local backend. Update this documentation when Electron integration is added.
+The application can run in a browser during development or as a Windows desktop installer built with Electron.
 
 ## Requirements
 
@@ -99,3 +99,36 @@ The following category types are seeded automatically: Investments, Transferenci
 - Dashboard charts for current-year transaction totals by category type and financial-goal progress
 
 The API associates user data through the `x-user-id` request header. Financial-goal progress currently uses the sum of the user's account balances because goals are not linked to individual accounts in the current data model.
+
+## Build the Windows desktop installer
+
+Install the root desktop dependencies as well as the frontend and backend dependencies:
+
+```bash
+npm install
+npm --prefix backend install
+npm --prefix frontend install
+```
+
+Build the frontend and backend, then package the Windows NSIS installer:
+
+```bash
+npm run build
+npm run rebuild:native
+npm run package:win
+```
+
+The installer is written to `release/`. The packaged application starts its local API with Electron's utility process and stores its SQLite database in a dedicated folder under Electron's per-user application data directory.
+
+## Automated GitHub distribution
+
+The `Build MWU Desktop for Windows` GitHub Actions workflow runs on pushes to `main` and `feature/**` branches, for version tags matching `v*`, and can also be started manually from the Actions tab. Each run publishes the installer as a downloadable workflow artifact. A version tag additionally creates a GitHub Release with the `.exe` attached.
+
+To publish a release, push a version tag, for example:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+The workflow builds a Windows x64 installer. The installer is not code-signed by default.
