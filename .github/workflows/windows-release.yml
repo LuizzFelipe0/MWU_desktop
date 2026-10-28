@@ -1,0 +1,77 @@
+name: Build MWU Desktop for Windows
+
+on:
+  push:
+    branches:
+      - main
+      - 'feature/**'
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      - name: Set up Python for native SQLite build
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Install desktop build dependencies
+        run: npm ci
+
+      - name: Install backend dependencies
+        run: npm ci --prefix backend
+
+      - name: Install frontend dependencies
+        run: npm ci --prefix frontend
+
+      - name: Build backend
+        run: npm run build:backend
+
+      - name: Run backend tests
+        run: npm --prefix backend test
+
+      - name: Install backend production dependencies
+        run: npm ci --prefix backend --omit=dev
+
+      - name: Rebuild SQLite for Electron
+        run: npx electron-rebuild --force --which-module sqlite3 --module-dir backend
+
+      - name: Build frontend
+        run: npm run build:frontend
+
+      - name: Package Windows installer
+        run: npm run package:win
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: mwu-desktop-windows
+          path: release/*.exe
+          if-no-files-found: error
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: release/*.exe
