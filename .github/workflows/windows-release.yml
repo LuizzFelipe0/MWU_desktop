@@ -1,9 +1,14 @@
 name: Build MWU Desktop for Windows
 
 on:
+  pull_request:
+    branches:
+      - development
+      - main
   push:
     branches:
       - main
+      - development
       - 'feature/**'
     tags:
       - 'v*'
